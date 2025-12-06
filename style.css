@@ -23,3 +23,20 @@
 ard-container::-webkit-scrollbar {
   display: none; /* For Chrome, Safari, and Opera */
 }
+
+.new_style {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.main-default-style {
+  /* w-11/12 mx-auto space-y-5 py-10 pb-40 */
+  width: 85%;
+  margin-left: auto;
+  margin-right: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 40px 0px 160px 0px;
+}
