@@ -98,7 +98,7 @@ const getButtons = () => {
 
 // showing the buttons in the UI  **
 const showbuttons = (levels) => {
-  console.log(levels);
+  //console.log(levels);
   const buttonContainer = document.getElementById("button-container");
 
   levels.forEach((level) => {
@@ -106,8 +106,10 @@ const showbuttons = (levels) => {
     // id: 102;
     // lessonName: "Everyday Words";
     // level_no: 2;
-    console.log("aa");
+    //console.log("aa");
     const div = document.createElement("div");
+
+    console.log(levels);
 
     div.innerHTML = `
             <button id="button-${level.level_no}" onclick = getLessons(${level.level_no}) class="btn btn-outline btn-primary">
@@ -125,7 +127,13 @@ const showbuttons = (levels) => {
 
 // getting lessons data from api call **
 const getLessons = (id) => {
-  //console.log(id);
+  // addding style to clicked button  and removing style from others
+
+  for (let i = 1; i <= 7; i++) {
+    const button = document.getElementById(`button-${i}`);
+    if (i == id) button.classList.remove("btn-outline");
+    else button.classList.add("btn-outline");
+  }
 
   fetch(`https://openapi.programming-hero.com/api/level/${id}`)
     .then((res) => res.json())
@@ -134,7 +142,7 @@ const getLessons = (id) => {
 
 // showing lessons in the UI dynamically **
 
-const showLessons = (lessons) => {
+const showLessons = async (lessons) => {
   console.log(lessons);
 
   // removing the previous lessons/FAQ section  from the UI
@@ -154,38 +162,82 @@ const showLessons = (lessons) => {
 
   // removing all previous styles and adding new styles
   mainContainer.className = "card-container";
-  mainContainer.classList.add("card-container");
 
-  lessons.data.forEach((lesson) => {
-    console.log(lesson);
+  // Use a for...of loop to handle async/await properly
+  for (const lesson of lessons.data) {
+    const url = `https://openapi.programming-hero.com/api/word/${lesson.id}`;
 
-    const div = document.createElement("div");
+    try {
+      // Fetch the lesson details
+      const response = await fetch(url);
+      const data = await response.json();
+      const info = data.data;
 
-    div.innerHTML = `
+      // Safely access info properties
+      const synonyms = info.synonyms || [];
+      const synonym1 = synonyms[0] || "N/A";
+      const synonym2 = synonyms[1] || "N/A";
+      const synonym3 = synonyms[2] || "N/A";
 
-   <div class="card w-96 h-[300px] bg-base-100 card-lg shadow-sm">
-        <div class="card-body">
-          <h2 class="text-4xl font-bold text-center">${lesson.word}</h2>
-          <p class="text-xl text-center text-gray-400">Meaning /Pronounciation</p>
-          <p class="text-3xl font-bold text-gray-500 text-center">${lesson.meaning}/${lesson.pronunciation}</p>
-          <div class="flex justify-between p-5">
-            <img
-              class="w-12 bg-gray-200 p-2 rounded-lg"
-              src="https://img.icons8.com/?size=100&id=12403&format=png&color=000000"
-              alt=""
-            />
-            <img
-              class="w-12 bg-gray-200 p-2 rounded-lg"
-              src="https://img.icons8.com/?size=100&id=XXKS9oY4uqiZ&format=png&color=000000"
-              alt=""
-            />
+      // Create the card dynamically
+      const div = document.createElement("div");
+
+      div.innerHTML = `
+        <div class="card w-90 h-[300px] bg-base-100 card-lg shadow-sm">
+          <div class="card-body">
+            <h2 class="text-4xl font-bold text-center">${lesson.word}</h2>
+            <p class="text-xl text-center text-gray-400">Meaning /Pronunciation</p>
+            <p class="text-3xl font-bold text-gray-500 text-center">${lesson.meaning}/${lesson.pronunciation}</p>
+            <div class="flex justify-between p-5">
+              <!-- Open the modal using ID.showModal() method -->
+              <button
+                class="btn w-12 h-12 bg-gray-200 p-2 rounded-lg"
+                onclick="document.getElementById('my_modal_${lesson.id}').showModal()"
+              >
+                <img
+                  src="https://img.icons8.com/?size=100&id=12403&format=png&color=000000"
+                  alt=""
+                />
+              </button>
+              <dialog id="my_modal_${lesson.id}" class="modal modal-bottom sm:modal-middle">
+                <div class="modal-box">
+                  <div class="border-2 p-4 rounded-lg space-y-2">
+                    <h2 id="word-${lesson.id}" class="text-4xl font-bold">${info.word}</h2>
+                    <p class="text-2xl font-bold">Meaning:</p>
+                    <p id="meaning-${lesson.id}" class="text-xl text-gray-400">${info.meaning}</p>
+                    <p class="text-2xl font-bold">Example:</p>
+                    <p id="sentence-${lesson.id}" class="text-2xl text-gray-400">${info.sentence}</p>
+                    <p class="text-2xl">Synonyms:</p>
+                    <div class="flex gap-3">
+                      <button class="py-2 rounded-lg px-5 bg-gray-100">${synonym1}</button>
+                      <button class="py-2 rounded-lg px-5 bg-gray-100">${synonym2}</button>
+                      <button class="py-2 rounded-lg px-5 bg-gray-100">${synonym3}</button>
+                    </div>
+                  </div>
+                  <div class="modal-action">
+                    <form method="dialog">
+                      <button class="btn bg-blue-500 text-white font-bold flex">
+                        Complete learning
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              </dialog>
+              <img
+                class="w-12 bg-gray-200 p-2 rounded-lg"
+                src="https://img.icons8.com/?size=100&id=XXKS9oY4uqiZ&format=png&color=000000"
+                alt=""
+              />
+            </div>
           </div>
         </div>
-      </div>
-  `;
+      `;
 
-    mainContainer.appendChild(div);
-  });
+      mainContainer.appendChild(div);
+    } catch (error) {
+      console.error("Error fetching lesson info:", error);
+    }
+  }
 };
 
 // function to show alert when no lessons are found **
@@ -209,6 +261,12 @@ const showAlert = () => {
   const mainContainer = document.getElementById("main-container");
   mainContainer.classList.add("new_style");
   mainContainer.appendChild(div);
+};
+
+showModel = (id) => {
+  console.log("clicked", id);
+
+  const url = `https://openapi.programming-hero.com/api/word/${id}`;
 };
 
 getButtons();
